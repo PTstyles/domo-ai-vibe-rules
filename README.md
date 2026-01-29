@@ -6,7 +6,7 @@
 
 ## What is this?
 
-When you use AI coding tools like [Cursor](https://cursor.sh/) or [Claude Code] (https://claude.ai), they don't know anything about Domo's APIs. This repo gives them that knowledge.
+When you use AI coding tools like [Cursor](https://cursor.sh/) or [Claude Code](https://claude.ai), they don't know anything about Domo's APIs. This repo gives them that knowledge.
 
 **The problem:** You prototype an app in Google AI Studio or Lovable, then move it to your local machine to continue development. But now your AI assistant doesn't know how to:
 - Connect to Domo datasets
