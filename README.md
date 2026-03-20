@@ -17,9 +17,12 @@ npx skills add stahura/domo-ai-vibe-rules --list
 npx skills add stahura/domo-ai-vibe-rules --skill domo-js --global
 ```
 
+For new Domo app builds, ask your agent to start with the `domo-app-initial-build-playbook` skill first, then follow its recommended skill order.
+
 ## Available Skills
 
-- `domo-da-cli` - Advanced DA CLI scaffolding, generation, and manifest instance workflows.
+- `domo-app-initial-build-playbook` - Kickoff sequence for new Domo app builds; routes to the right rules and skills in order.
+- `domo-da-cli` - Recommended for advanced users using DA CLI; ask your agent to use this skill for advanced scaffolding, generation, and manifest instance workflows.
 - `domo-app-publish` - Build and publish flow (`npm run build`, `cd dist`, `domo publish`).
 - `domo-js` - `ryuu.js` usage, navigation/events, and import safety.
 - `domo-dataset-query` - Detailed `@domoinc/query` syntax and constraints.
@@ -33,7 +36,7 @@ npx skills add stahura/domo-ai-vibe-rules --skill domo-js --global
 - `domo-performance-optimizations` - Data query performance rules.
 - `migrating-lovable-to-domo` - Convert SSR-heavy generated apps to Domo-compatible client apps.
 - `migrating-googleai-to-domo` - Convert AI Studio-origin projects to Domo static deploy contract.
-- `domo-custom-connector-ide` - Connector IDE auth/data processing patterns.
+- `domo-custom-connector-ide` - Connector IDE auth/data processing patterns (not for Domo app/card builds).
 
 ## Repository Structure
 

@@ -1,12 +1,14 @@
 ---
 name: domo-custom-connector-ide
-description: Patterns for Domo custom connector IDE auth, data processing, pagination, and parsing.
+description: Patterns for Domo Custom Connector IDE work only (not Domo App Platform custom apps).
 ---
 
 # Domo Custom Connector IDE
 
 ## When to use
-- Use for connector development (`authentication.js`, `dataProcessing.js`) rather than custom apps.
+- Use only for Domo Custom Connector IDE development (`authentication.js`, `dataProcessing.js`).
+- This is **not** for Domo App Platform custom apps.
+- If building a Domo app/card, use app skills like `domo-app-initial-build-playbook`, `domo-js`, and `domo-manifest`.
 
 ## Core files
 - `authentication.js`
