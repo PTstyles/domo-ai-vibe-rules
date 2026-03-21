@@ -3,28 +3,62 @@ name: domo-app-publish
 description: Build and publish Domo apps with dist workflow and first-publish ID handling.
 ---
 
-# Domo App Publish
+# Build & Deploy Workflow
 
-## When to use
-- Use when setting up or troubleshooting build/publish for Domo custom apps.
-- Use when DA CLI is not the chosen workflow.
+## Prerequisites
+- Node.js installed
+- Domo CLI installed (`npm install -g @domoinc/ryuu`)
 
-## Standard workflow
+## Local development
 ```bash
-npm install
-npm run dev
-npm run build
-cd dist
-domo login
-domo publish
+npm install          # Install dependencies
+npm run dev          # Start dev server (usually Vite)
 ```
 
-## First publish rule
-- Domo generates app `id` on first publish.
-- Copy that `id` from `dist/manifest.json` back to source `manifest.json`.
-- If not copied, every publish creates a new app.
+For API calls to work locally, you need ryuu-proxy configured and `domo login` authenticated.
 
-## Checklist
-- `manifest.json` has `dataSetId` and `fields: []` in dataset mappings
-- `thumbnail.png` exists alongside manifest
-- Vite base is `./`
+## Build for production
+```bash
+npm run build        # Outputs to dist/ (Vite) or build/ (CRA)
+```
+
+## Domo CLI Authentication
+```bash
+domo login           # Authenticate with your Domo instance
+```
+
+You'll be prompted for your Domo instance URL and credentials.
+
+## Publishing
+```bash
+cd dist              # Change to build output directory
+domo publish         # Publish to Domo
+```
+
+**Important - First publish:**
+- On first publish, Domo generates a new `id` for your app
+- This ID appears in the published `manifest.json` in your dist folder
+- **You must copy this ID back to your source `manifest.json`** (e.g., `public/manifest.json`)
+- If you don't, every publish creates a NEW app instead of updating the existing one
+
+```bash
+# After first publish, copy the generated ID:
+# dist/manifest.json → public/manifest.json (just the "id" field)
+```
+
+## Subsequent publishes
+Once the ID is in your source manifest:
+```bash
+npm run build && cd dist && domo publish
+```
+
+## Build Checklist
+
+Before publishing, ensure:
+- [ ] `manifest.json` has correct `dataSetId` (not `id`) for datasets
+- [ ] `manifest.json` has `fields: []` in each dataset mapping
+- [ ] `thumbnail.png` exists and is 300x300 pixels
+- [ ] All queries use `.select()` with specific columns (never fetch all columns)
+- [ ] Each visualization has its own optimized query
+- [ ] No `.aggregate()` calls (use `.groupBy()` or client-side aggregation)
+- [ ] `.groupBy()` calls have a grouping column (not just aggregations)

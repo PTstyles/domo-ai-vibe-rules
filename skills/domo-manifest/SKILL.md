@@ -1,3 +1,4 @@
+
 # manifest.json
 
 The `manifest.json` file is critical - it declares all external resources your app needs. Domo uses this to:
@@ -21,8 +22,6 @@ The `manifest.json` file is critical - it declares all external resources your a
   "packageMapping": []
 }
 ```
-
-NOTE: if datasetsMapping causes an error when publishing the app, change the property to "mapping".
 
 ## Key properties
 - `name` / `version` - App metadata
