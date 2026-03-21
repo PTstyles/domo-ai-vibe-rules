@@ -36,6 +36,45 @@ const text = body.output || body.choices?.[0]?.output;
 
 ## Additional AI Methods
 
+### `text_to_sql` schema argument must be an array
+
+Wrong:
+```typescript
+await AIClient.text_to_sql('Show top vendors by spend', {
+  dataSourceName: 'vendorPayments',
+  columns: [{ name: 'amount', type: 'number' }]
+});
+```
+
+Correct:
+```typescript
+await AIClient.text_to_sql('Show top vendors by spend', [
+  {
+    dataSourceName: 'vendorPayments',
+    description: 'Vendor payment invoices',
+    columns: [
+      { name: 'vendor', type: 'string' },
+      { name: 'amount', type: 'number' },
+      { name: 'date', type: 'date' }
+    ]
+  }
+]);
+```
+
+Signature reference:
+```typescript
+AIClient.text_to_sql(
+  input: string,
+  dataSourceSchemas?: DataSourceSchema[], // array
+  promptTemplate?: any,
+  parameters?: Record<string, string>,
+  model?: string,
+  modelConfiguration?: Record<string, Object>
+): Promise<Response<TextAIResponse>>;
+```
+
+Why array: this supports multi-table SQL generation (including join-aware SQL) when multiple schemas are provided.
+
 ```typescript
 const sqlResult = await AIClient.text_to_sql('Show total sales by region', [
   {
@@ -71,6 +110,7 @@ const output = body.output || body.choices?.[0]?.output;
 
 ## Checklist
 - [ ] `AIClient` methods use snake_case (`generate_text`, `text_to_sql`, etc.)
+- [ ] `AIClient.text_to_sql` second argument is `DataSourceSchema[]` (array), not a single object
 - [ ] Responses parsed from `data`/`body` fallback
 - [ ] Prefer `output`; fallback to `choices[0].output`
 - [ ] Error handling and loading state in UI

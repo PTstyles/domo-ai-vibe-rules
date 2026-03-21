@@ -435,6 +435,8 @@ const response = await AIClient.text_to_sql(
 );
 const responseBody = response.data || response.body || response;
 const sql = responseBody.output || responseBody.choices?.[0]?.output;
+// NOTE: second argument must be DataSourceSchema[] (array), not a single schema object.
+// Passing an array allows multi-dataset SQL generation.
 
 // Text to Beast Mode (calculated field)
 const response = await AIClient.text_to_beastmode(
@@ -484,26 +486,35 @@ const result = response.body.output;
 
 ```typescript
 // List available workflow models
-const response = await WorkflowClient.getModels();
+const response = await WorkflowClient.getAllModels();
 const models = response.body;
+const modelsWithPermissions = await WorkflowClient.getAllModels(true);
 
-// Get model details
-const response = await WorkflowClient.getModel('model-uuid');
+// Get model details by workflow alias from manifest workflowMapping.alias
+const response = await WorkflowClient.getModelDetails('myWorkflow');
 const model = response.body;
 
-// Start workflow instance
-const response = await WorkflowClient.start(
-  'model-uuid',
+// Start workflow instance by alias (NOT UUID)
+const response = await WorkflowClient.startModel(
+  'myWorkflow',
   { inputVar: 'value', anotherVar: 123 }
 );
 const instance = response.body;
 // { id: 'instance-uuid', modelId: '...', status: 'RUNNING', ... }
 
-// Check instance status
-const response = await WorkflowClient.getInstance('instance-uuid');
+// Check instance status by alias + instanceId
+const response = await WorkflowClient.getInstance('myWorkflow', 'instance-uuid');
 const status = response.body;
 // { id: '...', status: 'COMPLETED' | 'RUNNING' | 'FAILED', ... }
 ```
+
+All `WorkflowClient` methods are alias-based in app code:
+- `WorkflowClient.startModel(workflowAlias, variables)`
+- `WorkflowClient.getAllModels()` / `WorkflowClient.getAllModels(true)`
+- `WorkflowClient.getModelDetails(workflowAlias)`
+- `WorkflowClient.getInstance(workflowAlias, instanceId)`
+
+The workflow UUID lives in `manifest.json` under `workflowMapping[].modelId`; runtime client calls pass the alias.
 
 ## DomoClient - Alternative to ryuu.js
 
