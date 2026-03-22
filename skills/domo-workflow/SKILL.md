@@ -61,6 +61,12 @@ Workflows still require `workflowMapping` entries in `manifest.json`.
 }
 ```
 
+## Card mapping and input contract reminder
+
+- In Domo, map the app card to the intended workflow model in the card/app configuration UI (not just in source files).
+- Confirm the workflow start-node input parameters are configured in the workflow and match the payload keys your app sends in `WorkflowClient.startModel(workflowAlias, variables)`.
+- If parameter names/types/list settings do not match, workflow starts may fail or silently mis-handle inputs.
+
 ## Error Handling Pattern
 
 ```typescript
@@ -83,6 +89,8 @@ async function runWorkflow(workflowAlias: string, payload: Record<string, unknow
 
 ## Checklist
 - [ ] `workflowMapping` is configured
+- [ ] App card is mapped to the correct workflow in Domo UI
+- [ ] Workflow start-node input parameters match app payload keys/types
 - [ ] Calls use `WorkflowClient` alias-based methods (`startModel`, `getModelDetails`, `getInstance`)
 - [ ] Code passes workflow aliases (from `workflowMapping.alias`) rather than workflow UUIDs
 - [ ] Response parsing uses `response.body`

@@ -19,6 +19,21 @@ yarn add @domoinc/toolkit
 import { AIClient } from '@domoinc/toolkit';
 ```
 
+## Critical: AIClient methods are static
+
+Do **not** instantiate `AIClient` for these methods.
+
+Wrong:
+```typescript
+const ai = new AIClient();
+await ai.text_to_sql('...');
+```
+
+Correct:
+```typescript
+await AIClient.text_to_sql('...');
+```
+
 ## Text Generation
 
 ```typescript
@@ -61,7 +76,10 @@ await AIClient.text_to_sql('Show top vendors by spend', [
 ]);
 ```
 
-Signature reference:
+## Signature reference
+
+(Approximate; check installed toolkit typings for exact current signature.)
+
 ```typescript
 AIClient.text_to_sql(
   input: string,
@@ -74,6 +92,11 @@ AIClient.text_to_sql(
 ```
 
 Why array: this supports multi-table SQL generation (including join-aware SQL) when multiple schemas are provided.
+
+## text_to_sql usage note
+
+`text_to_sql` is great for ad-hoc SQL, but `/sql/v1` does **not** automatically apply dashboard/page filters.
+If filter-awareness is required in embedded cards, use Query API (`/data/v1` via `@domoinc/query`) for execution.
 
 ```typescript
 const sqlResult = await AIClient.text_to_sql('Show total sales by region', [
@@ -96,11 +119,14 @@ const beastModeResult = await AIClient.text_to_beastmode(
 - often uses `response.data`
 - may include both `output` and `choices`
 
-Always parse defensively:
+Use defensive parsing plus a strict string guard:
 
 ```typescript
-const body = response.data || response.body || response;
-const output = body.output || body.choices?.[0]?.output;
+const body = response?.data ?? response?.body ?? response;
+const outputCandidate = body?.output ?? body?.choices?.[0]?.output;
+const output = typeof outputCandidate === 'string' ? outputCandidate.trim() : '';
+
+if (!output) throw new Error('AI returned no usable output');
 ```
 
 ## Canonical Rules References
@@ -110,7 +136,8 @@ const output = body.output || body.choices?.[0]?.output;
 
 ## Checklist
 - [ ] `AIClient` methods use snake_case (`generate_text`, `text_to_sql`, etc.)
+- [ ] `AIClient` methods are called statically (for example `AIClient.text_to_sql(...)`, not instance methods)
 - [ ] `AIClient.text_to_sql` second argument is `DataSourceSchema[]` (array), not a single object
 - [ ] Responses parsed from `data`/`body` fallback
-- [ ] Prefer `output`; fallback to `choices[0].output`
+- [ ] Output extraction includes string guard and empty-output handling
 - [ ] Error handling and loading state in UI
