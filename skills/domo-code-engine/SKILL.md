@@ -43,6 +43,14 @@ CodeEngineClient.runFunction(
 ): Promise<any>;
 ```
 
+## Required contract disclosure to user
+
+When recommending or generating `CodeEngineClient.runFunction(...)` usage, the agent must explicitly tell the user:
+- exact input parameter names and types sent in `inputs`
+- expected output shape and types returned by the function
+
+This is required so the user can implement a matching Code Engine function contract.
+
 ## Error Handling Pattern
 
 ```typescript
@@ -80,5 +88,7 @@ async function executeFunction(
 - [ ] Calls use `CodeEngineClient.runFunction(packageId, version, functionName, inputs)`
 - [ ] `packageId`, `version`, and `functionName` are correct for the deployed function
 - [ ] Inputs match the function contract
+- [ ] Agent states exact input parameter names/types for `runFunction` calls
+- [ ] Agent states expected output shape/types for the function response
 - [ ] Output parsing handles `body`/`data`/raw response shape
 - [ ] Errors handled and surfaced to UI or logs
