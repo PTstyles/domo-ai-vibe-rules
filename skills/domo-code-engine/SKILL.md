@@ -5,7 +5,7 @@ description: Execute Code Engine functions from apps using CodeEngineClient with
 
 # Rule: Domo App Platform Code Engine (Toolkit-First)
 
-This rule is **toolkit-first**. Use `CodeEngineClient` for function execution from apps.
+This rule is **toolkit-first**. Use `CodeEngineClient.runFunction(...)` for Code Engine execution from apps.
 
 > Legacy endpoint-first guidance has been archived to `archive/legacy-rules/domo-code-engine.md`.
 
@@ -18,41 +18,53 @@ yarn add @domoinc/toolkit
 ```typescript
 import { CodeEngineClient } from '@domoinc/toolkit';
 
-const response = await CodeEngineClient.execute(
-  'calculateTax',
+const packageId = '12a45bc8-12de-fg67-891h-12ij567891kl';
+const version = '0.1.0';
+const functionName = 'calculateTax';
+
+const response = await CodeEngineClient.runFunction(
+  packageId,
+  version,
+  functionName,
   { amount: 1000, state: 'CA' }
 );
-const result = response.body.output;
+const result = response?.body ?? response?.data ?? response;
 ```
 
-## Manifest Requirements
+## `runFunction` signature
 
-Code Engine functions still require `packageMapping` in `manifest.json`.
-
-```json
-{
-  "packageMapping": [
-    {
-      "alias": "calculateTax",
-      "parameters": [
-        { "alias": "amount", "type": "number", "nullable": false, "isList": false, "children": null },
-        { "alias": "state", "type": "string", "nullable": false, "isList": false, "children": null }
-      ],
-      "output": { "alias": "result", "type": "object", "children": null }
-    }
-  ]
-}
+```typescript
+CodeEngineClient.runFunction(
+  packageId: string,
+  version: string,
+  functionName: string,
+  inputs: Record<string, any>,
+  options?: { parts?: FunctionParts[] }
+): Promise<any>;
 ```
 
 ## Error Handling Pattern
 
 ```typescript
-async function executeFunction(alias: string, payload: Record<string, unknown>) {
+async function executeFunction(
+  packageId: string,
+  version: string,
+  functionName: string,
+  payload: Record<string, unknown>
+) {
   try {
-    const response = await CodeEngineClient.execute(alias, payload);
-    return response.body;
+    const response = await CodeEngineClient.runFunction(
+      packageId,
+      version,
+      functionName,
+      payload
+    );
+    return response?.body ?? response?.data ?? response;
   } catch (error) {
-    console.error(`CodeEngineClient.execute failed for ${alias}`, error);
+    console.error(
+      `CodeEngineClient.runFunction failed for ${packageId}@${version}#${functionName}`,
+      error
+    );
     throw error;
   }
 }
@@ -65,7 +77,8 @@ async function executeFunction(alias: string, payload: Record<string, unknown>) 
 - Operational gotchas: `.cursor/rules/09-gotchas.mdc`
 
 ## Checklist
-- [ ] Function alias defined in `packageMapping`
-- [ ] Calls use `CodeEngineClient.execute()` (not raw `domo.post` by default)
-- [ ] Output parsing uses `response.body`
+- [ ] Calls use `CodeEngineClient.runFunction(packageId, version, functionName, inputs)`
+- [ ] `packageId`, `version`, and `functionName` are correct for the deployed function
+- [ ] Inputs match the function contract
+- [ ] Output parsing handles `body`/`data`/raw response shape
 - [ ] Errors handled and surfaced to UI or logs
