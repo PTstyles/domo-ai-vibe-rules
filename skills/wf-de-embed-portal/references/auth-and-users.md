@@ -55,13 +55,14 @@ export async function listDocuments(collectionKey: string) {
   const id = COLLECTIONS[collectionKey]
   const data = await appDbFetch(`${id}/documents/`)
   // AppDB wraps content — unwrap it
-  return data.map((doc: any) => ({ id: doc.id, ...doc.content }))
+  // Spread content first, then id — AppDB's doc.id always wins as the identifier
+  return data.map((doc: any) => ({ ...doc.content, id: doc.id }))
 }
 
 export async function getDocument(collectionKey: string, docId: string) {
   const id = COLLECTIONS[collectionKey]
   const doc = await appDbFetch(`${id}/documents/${docId}`)
-  return { id: doc.id, ...doc.content }
+  return { ...doc.content, id: doc.id }
 }
 
 export async function createDocument(collectionKey: string, content: any) {
@@ -300,7 +301,6 @@ export async function POST(req: NextRequest) {
   const hashedPassword = await bcrypt.hash(password, 10)
 
   const newUser = {
-    id: crypto.randomUUID(),
     username: username.toLowerCase(),
     email: email?.toLowerCase(),
     password: hashedPassword,
