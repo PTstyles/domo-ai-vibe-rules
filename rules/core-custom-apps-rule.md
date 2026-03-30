@@ -10,6 +10,7 @@ alwaysApply: true
 - Do not use SSR patterns (`getServerSideProps`, Remix loaders/actions, SvelteKit server files, Nuxt server routes, `pages/api`, `app/api`, `"use server"`).
 - If SSR is detected, stop and explicitly recommend client-side refactor (React + Vite) or Code Engine for server logic.
 - **Exception — Embed host applications:** The embed skills (`programmatic-filters`, `edit-embed`) target the *host* application that embeds Domo content, not a Domo custom app. These require server-side code (API routes for OAuth token exchange, JWT signing) and use the Domo public API (`api.domo.com`) and Identity Broker — this is expected and correct. The client-only constraint does not apply to embed host apps.
+- If a Domo custom app needs server-side functionality, require Code Engine package lifecycle steps (create/update package + manifest mapping sync) before adding runtime invocation calls.
 
 ## API boundary
 - Use Domo App Platform APIs (`domo.js`, `@domoinc/query`, `@domoinc/toolkit`).
@@ -36,8 +37,11 @@ alwaysApply: true
 - domo.js usage -> `skills/apps/domo-js/SKILL.md`
 - Toolkit usage -> `skills/apps/toolkit/SKILL.md`
 - AppDB -> `skills/apps/appdb/SKILL.md`
+- AppDB collection create (datastore + collection lifecycle) -> `skills/cli/appdb-collection-create/SKILL.md`
 - AI services -> `skills/apps/ai-service-layer/SKILL.md`
 - Code Engine -> `skills/apps/code-engine/SKILL.md`
+- Code Engine package create -> `skills/cli/code-engine-create/SKILL.md`
+- Code Engine package update -> `skills/cli/code-engine-update/SKILL.md`
 - Workflows -> `skills/apps/workflow/SKILL.md`
 - SQL queries -> `skills/apps/sql-query/SKILL.md`
 - Manifest wiring -> `skills/apps/manifest/SKILL.md`
