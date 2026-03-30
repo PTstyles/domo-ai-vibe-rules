@@ -30,7 +30,7 @@ Domo is a broad platform — "data query" means something completely different w
 | `apps/` | Domo App Platform custom apps |
 | `domo-everywhere/` | Embedding Domo content in external applications |
 | `connectors/` | Custom Connector IDE |
-| `playbooks/` | End-to-end orchestration runbooks that reference other skills in order |
+| `skill-orchestration/` | End-to-end orchestration runbooks that reference other skills in order |
 | `documents/` | Document and slide deck generation |
 | `cli/` | Command-line tooling (future) |
 
@@ -95,7 +95,7 @@ skills/
 │   └── embed-portal/SKILL.md
 ├── connectors/
 │   └── connector-dev/SKILL.md
-├── playbooks/
+├── skill-orchestration/
 │   └── initial-build/SKILL.md
 ├── documents/
 │   └── html-deck/SKILL.md
