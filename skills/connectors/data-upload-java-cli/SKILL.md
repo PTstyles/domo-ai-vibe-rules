@@ -10,7 +10,6 @@
 
 This guide covers the **Java CLI fallback** for uploading CSV data to Domo using `domoutil.jar`. The CLI handles schema derivation, dataset creation, chunked uploads, and indexing automatically.
 
-For API-backed sources, see [JSON Connector First / CLI Fallback Pattern](#json-connector-first--cli-fallback-pattern) below.
 
 ## JSON Connector First / CLI Fallback Pattern
 
