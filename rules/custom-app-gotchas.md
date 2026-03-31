@@ -24,7 +24,7 @@ Apply when: debugging errors (e.g. [object Object], DA0057, “reading 'map' of 
 2. **Query builder aggregation keys must be field names**
    - Aggregation keys in `groupBy()` and `dateGrain()` must match actual dataset field names
    - Using custom aliases causes `[object Object]` errors in results
-   ```typescript
+   ```typescripta
    // ✅ Correct - key matches dataset field
    .groupBy('region', { Sales_Amount: 'sum' })
    
