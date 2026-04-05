@@ -1,5 +1,5 @@
 ---
-name: basic-app-build
+name: initial-build
 description: Orchestrates a new Domo custom app build or existing-app takeover from scratch. Loads rules, sequences capability skills, and tracks progress through manifest, data, UI, and publish phases. Use when starting a new Domo app project, taking over an existing app, or normalizing an app to platform best practices.
 ---
 
@@ -19,6 +19,7 @@ Build Progress:
 - [ ] Phase 0: Rules loaded
 - [ ] Phase 1: Manifest & contracts
 - [ ] Phase 2: App shell (domo.js)
+- [ ] Phase 2b: App Studio integration (if embedded in App Studio)
 - [ ] Phase 3: Data access
 - [ ] Phase 4: App storage (if needed)
 - [ ] Phase 5: Toolkit clients (if needed)
@@ -54,6 +55,21 @@ Set up the baseline: `ryuu.js` import, navigation via `domo.navigate()`, event l
 
 **Advanced users using DA CLI?** Ask the agent to also use `da-cli` for scaffolding and manifest instance workflows. Should not be used unless user explicitly asks agent to use it.
 
+## Phase 2b — App Studio integration (if embedded in App Studio)
+
+Use `app-studio-pro-code`.
+
+**Skip this phase** if the app is a standalone full-page app. Use this phase when the custom app will be placed as a card inside an App Studio page.
+
+Wire up event listeners so the app reacts to the surrounding App Studio environment:
+
+- **Page filters**: Register `domo.onFiltersUpdated` at the top level. Filter objects use `operand` (not `operator`) with values like `BETWEEN`, `IN`, `GREATER_THAN_EQUAL`. Map column names to internal state, then refetch data immediately.
+- **Variables**: Register `domo.onVariablesUpdated` at the top level. Variables arrive keyed by numeric function ID strings (e.g., `"858"`) with values at `parsedExpression.value`. Use a pending/commit pattern — stage changes, commit on Apply, then refetch.
+- **Variable write-back**: Use `domo.requestVariablesUpdate([{ functionId, value }], onAck, onReply)` for dependent dropdowns. Guard with an `isUpdatingVariable` flag to prevent infinite loops.
+- **Theme alignment**: Use `domo-app-theme` as the base CSS. Set body background to `transparent` or `--bg` to blend with the App Studio canvas.
+
+See `app-studio-pro-code` for the full filter/variable integration reference, including production-tested code patterns.
+
 ## Phase 3 — Data access (if domo datasets need to be queried)
 
 Use `dataset-query` (primary) and `data-api` (routing overview).
@@ -65,6 +81,8 @@ Before writing UI/data-mapping logic, fetch the real schema for every dataset in
 If required fields are missing for the requested visualization, fail fast with a clear mapping error instead of rendering zeros.
 
 **Need raw SQL?** Use `sql-query`, but know that SQL ignores page filters.
+
+**Explicit filter handling for non-Query data access**: If the app uses Code Engine calls, stored procedures, or raw SQL instead of `@domoinc/query`, page filters will NOT be applied automatically. You must register `domo.onFiltersUpdated` (see Phase 2b) and pass filter values as parameters to your data source manually.
 
 ## Phase 4 — App storage (if appdb , or any user data entry is needed)
 

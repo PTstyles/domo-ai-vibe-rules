@@ -1,3 +1,8 @@
+---
+name: magic-etl
+description: Create, update, and execute Magic ETL dataflows programmatically via API and CLI. Covers DAG-based JSON dataflow definitions, input/transform/output node wiring, join operations, and execution lifecycle.
+---
+
 # Creating Magic ETL Dataflows Programmatically in Domo
 
 ## Overview
@@ -117,6 +122,111 @@ Same headers and body format as POST. Include the full definition.
 | `outputs` | Array of output dataset references |
 | `actions` | Array of action nodes (the DAG) |
 
+### Top-Level `gui` Field (Canvas Layout & Sections)
+
+The `gui` field controls the visual canvas layout, including colored **Section** zones that group related tiles. When `useGraphUI: true`, the canvas `elements` array controls tile positioning (overriding action-level `gui.x`/`gui.y`).
+
+```json
+{
+  "gui": {
+    "version": "1.0",
+    "canvases": {
+      "default": {
+        "canvasSettings": {
+          "coarserGrid": false,
+          "hideCoarserGridPopUp": false,
+          "backgroundVariant": "None"
+        },
+        "elements": [
+          { "type": "Section", ... },
+          { "type": "Tile", ... }
+        ],
+        "disabledActions": []
+      }
+    },
+    "useGraphUI": true
+  }
+}
+```
+
+#### Section Elements (Colored Zone Backgrounds)
+
+Sections are colored rectangular zones that visually group related tiles on the canvas:
+
+```json
+{
+  "id": "a-unique-uuid",
+  "type": "Section",
+  "x": 56,
+  "y": 72,
+  "width": 1320,
+  "height": 288,
+  "name": "Work Orders Denormalization",
+  "backgroundColor": "var(--colorChartBlue6)"
+}
+```
+
+| Field | Description |
+|---|---|
+| `id` | Unique UUID for the section |
+| `type` | Must be `"Section"` |
+| `x`, `y` | Absolute position on the canvas (top-left corner) |
+| `width`, `height` | Size of the colored zone in pixels |
+| `name` | Label displayed in the section header |
+| `backgroundColor` | CSS variable for the zone color (see table below) |
+
+#### Available Section Background Colors
+
+| CSS Variable | Color | Suggested Use |
+|---|---|---|
+| `var(--colorChartBlue6)` | Light blue | Input/staging pipelines |
+| `var(--colorChartGreen6)` | Light green | Quality/validation pipelines |
+| `var(--colorChartPurple6)` | Light purple | Output/publishing pipelines |
+| `var(--colorChartOrange6)` | Light orange | Transform/enrichment pipelines |
+| `var(--colorChartRed6)` | Light red | Filter/exclusion pipelines |
+| `var(--colorChartYellow6)` | Light yellow | Shared/dimension tables |
+
+The `6` suffix indicates the lightest shade — ideal for section backgrounds so tile labels remain readable.
+
+#### Tile Elements (Action Positions)
+
+Each action node has a corresponding `Tile` element in the canvas. Tiles can be **parented** inside a Section, in which case their `x`/`y` are **relative to the Section's position**:
+
+```json
+{
+  "id": "LoadFromVault-work_orders",
+  "type": "Tile",
+  "x": 72,
+  "y": 56,
+  "parentId": "section-uuid-here",
+  "color": null,
+  "colorSource": null
+}
+```
+
+| Field | Description |
+|---|---|
+| `id` | Must match the action's `id` field |
+| `type` | Must be `"Tile"` |
+| `x`, `y` | Position — **absolute** if no `parentId`, **relative to parent Section** if `parentId` is set |
+| `parentId` | UUID of the parent Section element (omit for unparented tiles) |
+| `color` | Optional integer color code for the tile icon |
+
+**Reparenting formula:** When moving a tile into a section, convert absolute to relative coordinates:
+- `relativeX = absoluteX - section.x`
+- `relativeY = absoluteY - section.y`
+
+Tiles without `parentId` render at absolute canvas coordinates and float outside any section.
+
+#### ALWAYS Add Sections When Creating Dataflows
+
+When building a dataflow with multiple logical branches or processing stages, **always add Section elements** to organize the visual layout. This is a best practice that makes dataflows immediately understandable. Group tiles by:
+- **Pipeline branch** (e.g., each fact table's join chain gets its own section)
+- **Processing stage** (e.g., "Input/Staging", "Transforms", "Output")
+- **Shared resources** (e.g., dimension tables used across branches)
+
+Assign a distinct color to each section for visual differentiation.
+
 ### Inputs Array
 
 Each input references a Domo dataset that feeds into the dataflow:
@@ -202,7 +312,7 @@ Every action has these fields:
 |---|---|
 | `id` | Unique identifier for this action node. Can be any string, but convention is `TypeName-uuid` |
 | `dependsOn` | Array of action IDs that must complete before this one runs |
-| `gui.x` / `gui.y` | Position in the visual Magic ETL canvas. Space nodes ~224px apart horizontally |
+| `gui.x` / `gui.y` | Position in the visual canvas. When `useGraphUI: true`, the top-level `gui.canvases.default.elements` array takes precedence — set both to stay consistent |
 | `settings.preferredDatabaseEntityType` | Always `"TEMP_VIEW"` |
 | `tables` | Always `[{}]` |
 
@@ -1072,6 +1182,8 @@ For `MergeJoin`, the `dependsOn` array must contain both `step1` and `step2` act
 
 The `gui.x` and `gui.y` values determine where nodes appear in the Domo Magic ETL visual editor. Space nodes approximately 224px apart horizontally and 192px vertically for a clean layout. Input nodes typically start at `x: 128`.
 
+When `useGraphUI: true` is set (the modern canvas mode), tile positions are controlled by the `gui.canvases.default.elements` array at the top level — not by the action-level `gui` fields. Always set both to stay consistent. See the "Top-Level `gui` Field" section for the full Section and Tile element schema.
+
 ### 7. Dataflow Creation via API — Auth & DRAFT Limitations
 
 **Auth requirement:** `POST /api/dataprocessing/v1/dataflows` is an internal API. Developer tokens (`DDCI...`) get **403 Forbidden** even for Admin users. You must use SID-based auth (refresh token → access token → SID → `X-Domo-Authentication` header). The body **must** include `"databaseType": "MAGIC"`.
@@ -1182,7 +1294,8 @@ All action types discovered across existing dataflows in the instance:
 1. **Get input dataset schemas** — use `get-schema -id <UUID>` on each input dataset to understand available columns
 2. **Export an existing dataflow as a template** — `list-dataflow -i <ID> -d -f template.json`
 3. **Build the JSON definition** — define LoadFromVault nodes for inputs, GroupBy/MergeJoin for transforms, PublishToVault for output
-4. **Create via API** — `POST /api/dataprocessing/v1/dataflows`
-5. **Execute** — `dataflow-run-now -i <NEW_ID>` or `POST /api/dataprocessing/v1/dataflows/<ID>/executions`
-6. **Check status** — `GET /api/dataprocessing/v1/dataflows/<ID>/executions?limit=1`
-7. **Iterate** — if it fails, update via `PUT /api/dataprocessing/v1/dataflows/<ID>` and re-run
+4. **Add colored Section zones** — group related tiles into Section elements in `gui.canvases.default.elements`. Assign each logical branch or processing stage a distinct color. Reparent Tile elements into their sections using `parentId` and relative coordinates. This step is **required** for all dataflows with 2+ branches or stages.
+5. **Create via API** — `POST /api/dataprocessing/v1/dataflows`
+6. **Execute** — `dataflow-run-now -i <NEW_ID>` or `POST /api/dataprocessing/v1/dataflows/<ID>/executions`
+7. **Check status** — `GET /api/dataprocessing/v1/dataflows/<ID>/executions?limit=1`
+8. **Iterate** — if it fails, update via `PUT /api/dataprocessing/v1/dataflows/<ID>` and re-run
