@@ -28,50 +28,25 @@ Deck Build Progress:
 
 ## Phase 1 — Slide skeleton
 
-### Use the Domo theme
+### Use the Domo theme — MANDATORY FIRST STEP
 
-Read [domo-theme.md](domo-theme.md) for the complete Domo-branded CSS, inline SVG logo, and HTML patterns. It contains:
+1. Read [references/domo-theme.md](references/domo-theme.md) — it contains a **complete, copy-paste-ready HTML skeleton** that produces slides matching the Domo template exactly.
+2. Read [assets/logo-data-uri.txt](assets/logo-data-uri.txt) — it contains the actual Domo logo as a base64 PNG data URI. Replace every `LOGO_DATA_URI` placeholder in the skeleton with this value.
+3. The logo PNG is also at [assets/domologo.png](assets/domologo.png).
 
-- **Full CSS** — all variables (`--domo-blue`, `--accent-green`, etc.), component classes (`.slide`, `.slide-header`, `.slide-footer`, `.cover-slide`, `.deck-table`, `.card`, `.flow-box`, etc.), and the print-safe `@media print` block.
-- **Inline Domo logo** — an SVG data URI so no external image file is needed. Use it in both the cover logo and every slide footer.
-- **Cover slide pattern** — gradient background with sparkle effects, large Domo logo top-left, title + bullets left, summary cards right.
-- **Content slide pattern** — header/content/footer anatomy with page numbers.
-- **Content slide with background** — the `has-bg` variant with `#DDE5ED` background.
-- **Flow diagram pattern** — four-phase pipeline with colored boxes and arrows.
-- **Accent color table** — which color to use for each element type.
+**Do not skip this step.** Copy the complete skeleton from the theme file, then build slides into it. Every content slide MUST have:
+
+- **Header**: `<div class="slide-header">` with `<h1>`, `.subtitle`, and **`.header-line`** (thin gray separator — required)
+- **Content**: `<div class="slide-content">` (use `has-bg` class for gray `#DDE5ED` background, omit for white)
+- **Footer**: `<div class="slide-footer">` with `.confidential` (left), `.footer-line` (center), and `.domo-badge` with **`<img src="LOGO_DATA_URI">`** (bottom-right — required)
 
 ### Dimensions
 
-Standard 16:9 widescreen. All sizing flows from two CSS variables:
+Standard 16:9 widescreen: `--slide-w: 1024px; --slide-h: 576px;`
 
-```css
-:root { --slide-w: 1024px; --slide-h: 576px; }
-```
+### Content area positioning
 
-### Slide anatomy
-
-Every slide has three layers. The content area must respect header and footer bounds.
-
-```html
-<div class="slide">
-  <div class="slide-header">
-    <h1>Slide Title</h1>
-    <div class="subtitle">UPPERCASE SUBTITLE</div>
-  </div>
-  <div class="slide-content" style="position:absolute; top:100px; left:0; right:0; bottom:52px; padding:24px 48px;">
-    <!-- content -->
-  </div>
-  <div class="slide-footer">
-    <span class="confidential">Confidential</span>
-    <span class="footer-line"></span>
-    <span class="domo-badge"><span class="page-num">1</span><img src="DATA_URI_LOGO" alt="Domo"></span>
-  </div>
-</div>
-```
-
-**Content area positioning**: Use `position:absolute` with `top` (below header) and `bottom:52px` (above footer). This prevents content–footer overlap.
-
-**Domo logo**: Replace `DATA_URI_LOGO` with the inline SVG data URI from [domo-theme.md](domo-theme.md).
+Use `position:absolute` with `top` (below header, typically `90-100px`) and `bottom:52px` (above footer). This prevents content-footer overlap.
 
 ## Phase 2 — Content population
 
