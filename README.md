@@ -24,6 +24,19 @@ npx skills add https://github.com/stahura/domo-ai-vibe-rules/skills --all -g
 
 The `-g` flag installs skills globally so they are available in every project. Leave it off to install only in your current directory — but you will need to re-install in each new project you start.
 
+### What `npx skills add` can see
+
+The skills CLI only **discovers** a skill if each `SKILL.md` has valid YAML frontmatter at the very top — otherwise that folder is skipped and nothing gets installed for it. Required shape:
+
+```yaml
+---
+name: your-skill-name
+description: One line describing when to use this skill.
+---
+```
+
+Use `name:` and `description:` as real YAML keys (not Markdown headings like `## name:`). No blank lines inside the block, and the closing `---` is required. If you add or edit skills in a fork, follow this format or `npx skills add … --all` will silently omit them.
+
 For new Domo app builds, ask your agent to start with the `basic-app-build` skill first — it sequences the other skills for you.
 
 ## Why This Organization
