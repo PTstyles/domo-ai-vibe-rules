@@ -1,14 +1,12 @@
 # Domo Deck Theme Reference
 
-Complete CSS, HTML patterns, and inline assets for Domo-branded slide decks. Referenced by the main SKILL.md during Phase 1.
-Read `references/domo-theme.md` for full domo design patterns.
-## Inline Domo Logo (SVG)
+Complete CSS, HTML skeleton, and patterns for Domo-branded slide decks. This file is the single source of truth — copy the skeleton below and start adding content.
 
-Use this SVG directly in `<img>` tags via a data URI. No external file needed.
+## Domo Logo
 
-```html
-<img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect width='120' height='120' rx='12' fill='%237BAED4'/%3E%3Ctext x='60' y='72' text-anchor='middle' font-family='Arial,Helvetica,sans-serif' font-weight='700' font-size='36' fill='white' letter-spacing='2'%3EDOMO%3C/text%3E%3C/svg%3E" alt="Domo">
-```
+The actual Domo logo PNG is at `assets/domologo.png` (relative to this skill). For inline embedding so the HTML works without external files, read the full base64 data URI from `assets/logo-data-uri.txt` and use it in `<img src="...">` tags.
+
+**Critical**: Every content slide footer AND the cover slide must show the Domo logo. Replace every `LOGO_DATA_URI` placeholder below with the contents of `assets/logo-data-uri.txt`.
 
 ## Complete CSS
 
@@ -56,14 +54,15 @@ body {
   box-shadow: 0 4px 24px rgba(0,0,0,0.12);
 }
 
-/* --- FOOTER --- */
+/* --- FOOTER (every content slide) --- */
 .slide-footer {
   position: absolute;
   bottom: 0; left: 0; right: 0;
   height: 52px;
   display: flex;
   align-items: center;
-  padding: 0 40px;
+  justify-content: space-between;
+  padding: 0 32px;
 }
 .slide-footer .confidential {
   font-size: 8px;
@@ -282,6 +281,40 @@ body {
 .fb-optimize{ background: #E8F5E9; color: #3A7D44; }
 .fb-amplify { background: #F3E5F5; color: #7B3F9E; }
 
+/* --- SECTION DIVIDER --- */
+.section-slide {
+  display: flex; flex-direction: column; justify-content: center; padding: 0 64px;
+}
+.section-slide .section-num {
+  font-size: 14px; font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--domo-blue); margin-bottom: 8px;
+}
+.section-slide h1 { font-size: 36px; font-weight: 800; color: var(--title-black); line-height: 1.15; }
+.section-slide .section-desc {
+  font-size: 15px; color: var(--text-mid); margin-top: 12px; max-width: 640px; line-height: 1.6;
+}
+.section-slide .section-accent {
+  width: 48px; height: 3px; background: var(--domo-blue); margin-top: 20px; border-radius: 2px;
+}
+
+/* --- SCORE BAR --- */
+.score-row { display: flex; align-items: center; margin-bottom: 6px; }
+.score-label { width: 150px; font-size: 11px; font-weight: 600; color: var(--text-dark); flex-shrink: 0; }
+.score-bar-track { flex: 1; height: 14px; background: #E8ECF0; border-radius: 7px; overflow: hidden; margin: 0 10px; }
+.score-bar-fill { height: 100%; border-radius: 7px; background: var(--domo-blue); }
+.score-value { width: 36px; font-size: 12px; font-weight: 700; color: var(--title-black); text-align: right; flex-shrink: 0; }
+
+/* --- QUICK WIN TABLE --- */
+.qw-table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-top: 10px; }
+.qw-table th {
+  text-align: left; font-weight: 700; font-size: 9px; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--white); background: var(--domo-blue); padding: 8px 12px;
+}
+.qw-table th:first-child { border-radius: 4px 0 0 0; }
+.qw-table th:last-child { border-radius: 0 4px 0 0; }
+.qw-table td { padding: 8px 12px; color: var(--text-dark); border-bottom: 1px solid #E8ECF0; vertical-align: top; line-height: 1.5; }
+.qw-table tr:nth-child(even) td { background: #F6F8FA; }
+
 /* --- PRINT --- */
 @media print {
   body { background: white; gap: 0; padding: 0; }
@@ -290,7 +323,9 @@ body {
 }
 ```
 
-## HTML Head
+## Complete Skeleton HTML
+
+Copy this entire HTML file as your starting point. It produces two slides matching the Domo Template exactly — one with gray background, one without. Replace every `LOGO_DATA_URI` with the contents of `assets/logo-data-uri.txt`.
 
 ```html
 <!DOCTYPE html>
@@ -301,27 +336,80 @@ body {
 <title>DECK_TITLE</title>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  /* Paste Complete CSS here */
+  /* Paste the Complete CSS block above here */
 </style>
 </head>
 <body>
+
+<!-- SLIDE: Content slide WITH gray background (default for most slides) -->
+<div class="slide">
+  <div class="slide-header">
+    <h1>Slide Title</h1>
+    <div class="subtitle">SLIDE SUBTITLE OR DESCRIPTION</div>
+    <div class="header-line"></div>
+  </div>
+  <div class="slide-content has-bg">
+    <!-- Content goes here — #DDE5ED gray background -->
+  </div>
+  <div class="slide-footer">
+    <span class="confidential">Confidential</span>
+    <span class="footer-line"></span>
+    <span class="domo-badge">
+      <img src="LOGO_DATA_URI" alt="Domo">
+    </span>
+  </div>
+</div>
+
+<!-- SLIDE: Content slide WITHOUT gray background (white) -->
+<div class="slide">
+  <div class="slide-header">
+    <h1>Slide Title</h1>
+    <div class="subtitle">SLIDE SUBTITLE OR DESCRIPTION</div>
+    <div class="header-line"></div>
+  </div>
+  <div class="slide-content" style="position:absolute; top:100px; left:0; right:0; bottom:52px; padding:24px 40px;">
+    <!-- Content goes here — white background -->
+  </div>
+  <div class="slide-footer">
+    <span class="confidential">Confidential</span>
+    <span class="footer-line"></span>
+    <span class="domo-badge">
+      <img src="LOGO_DATA_URI" alt="Domo">
+    </span>
+  </div>
+</div>
+
+</body>
+</html>
 ```
+
+## Slide Anatomy — Mandatory Elements
+
+Every content slide MUST have all three layers. Missing any one breaks the layout.
+
+| Layer | Element | Purpose |
+|-------|---------|---------|
+| **Header** | `<div class="slide-header">` with `<h1>`, `.subtitle`, and **`.header-line`** | Title + blue subtitle + thin gray separator |
+| **Content** | `<div class="slide-content">` (add `has-bg` class for gray background) | Main body between header and footer |
+| **Footer** | `<div class="slide-footer">` with `.confidential`, `.footer-line`, `.domo-badge` + `<img>` | "CONFIDENTIAL" left, gray line center, **Domo logo bottom-right** |
+
+**The `.header-line` div is required** — it produces the thin gray separator visible in every slide.
+
+**The Domo logo `<img>` in `.domo-badge` is required** — bottom-right of every content slide.
 
 ## Cover Slide Pattern
 
-The cover slide uses a gradient background with subtle sparkle effects, a large Domo logo top-left, title + bullets on the left, and optional summary cards on the right.
+Insert as the first slide. Uses the same `LOGO_DATA_URI`.
 
 ```html
 <div class="slide cover-slide">
   <div class="cover-logo">
-    <img src="DATA_URI_LOGO" alt="Domo">
+    <img src="LOGO_DATA_URI" alt="Domo">
   </div>
   <div class="cover-body">
     <div class="cover-left">
       <h1>Deck Title<br>Goes Here</h1>
-      <div class="cover-sub">
-        A one-line description of this deck's purpose.
-      </div>
+      <div class="cover-sub">One-line description of this deck's purpose.</div>
       <ul class="cover-bullets">
         <li>Key point one.</li>
         <li>Key point two.</li>
@@ -341,106 +429,39 @@ The cover slide uses a gradient background with subtle sparkle effects, a large 
         <div class="cc-title">Section Three</div>
         <div class="cc-sub">SHORT DESCRIPTOR</div>
       </div>
-      <div class="cover-card" style="border-left-color: var(--accent-coral);">
-        <div class="cc-title">Section Four</div>
-        <div class="cc-sub">SHORT DESCRIPTOR</div>
-      </div>
     </div>
   </div>
   <div class="cover-footer">Confidential</div>
 </div>
 ```
 
-Replace `DATA_URI_LOGO` with the inline SVG data URI from the top of this file.
+## Adding Page Numbers
 
-## Content Slide Pattern
-
-```html
-<div class="slide">
-  <div class="slide-header">
-    <h1>Slide Title</h1>
-    <div class="subtitle">UPPERCASE SUBTITLE</div>
-  </div>
-  <div class="slide-content" style="position:absolute; top:100px; left:0; right:0; bottom:52px; padding:24px 48px; display:flex; flex-direction:column;">
-    <!-- slide body -->
-  </div>
-  <div class="slide-footer">
-    <span class="confidential">Confidential</span>
-    <span class="footer-line"></span>
-    <span class="domo-badge">
-      <span class="page-num">2</span>
-      <img src="DATA_URI_LOGO" alt="Domo">
-    </span>
-  </div>
-</div>
-```
-
-## Content Slide with Background
-
-Use `has-bg` class for slides that need the light blue-gray content area:
+To show a page number above the logo in the footer:
 
 ```html
-<div class="slide">
-  <div class="slide-header">
-    <h1>Slide Title</h1>
-    <div class="subtitle">UPPERCASE SUBTITLE</div>
-  </div>
-  <div class="slide-content has-bg">
-    <!-- content auto-fills from top:90px to bottom:52px with #DDE5ED background -->
-  </div>
-  <div class="slide-footer">
-    <span class="confidential">Confidential</span>
-    <span class="footer-line"></span>
-    <span class="domo-badge">
-      <span class="page-num">3</span>
-      <img src="DATA_URI_LOGO" alt="Domo">
-    </span>
-  </div>
-</div>
+<span class="domo-badge">
+  <span class="page-num">2</span>
+  <img src="LOGO_DATA_URI" alt="Domo">
+</span>
 ```
 
-## Flow Diagram Pattern
+## When to Use `has-bg` vs Plain White
 
-Four-phase pipeline with arrows:
+- **`has-bg`** (gray background `#DDE5ED`): Default for most content slides — tables, cards, diagrams, info boxes.
+- **Plain white**: Text-heavy slides, screenshot showcases, or when content needs maximum contrast.
 
-```html
-<div class="flow-row">
-  <div class="flow-box fb-intake">
-    <div class="flow-num">Phase 1</div>
-    <div class="flow-title">Intake</div>
-    <div class="flow-desc">Description text here.</div>
-  </div>
-  <span class="flow-arrow">&#9654;</span>
-  <div class="flow-box fb-review">
-    <div class="flow-num">Phase 2</div>
-    <div class="flow-title">Review</div>
-    <div class="flow-desc">Description text here.</div>
-  </div>
-  <span class="flow-arrow">&#9654;</span>
-  <div class="flow-box fb-optimize">
-    <div class="flow-num">Phase 3</div>
-    <div class="flow-title">Optimize</div>
-    <div class="flow-desc">Description text here.</div>
-  </div>
-  <span class="flow-arrow">&#9654;</span>
-  <div class="flow-box fb-amplify">
-    <div class="flow-num">Phase 4</div>
-    <div class="flow-title">Amplify</div>
-    <div class="flow-desc">Description text here.</div>
-  </div>
-</div>
-```
+## Accent Color Reference
 
-## Accent Color Usage
-
-| Element | Color variable | Hex |
-|---------|---------------|-----|
+| Element | Variable | Hex |
+|---------|----------|-----|
 | Primary / headers / links | `--domo-blue` | `#7BAED4` |
 | Phase 1 / Intake | `--accent-orange` | `#E8A44A` |
-| Phase 2 / Review | `--accent-green` | `#6BBF8A` |
-| Phase 3 / Optimize | `--accent-coral` | `#E07A6A` |
-| Phase 4 / Amplify | `--accent-purple` | `#9B8EC4` |
+| Phase 2 / Success | `--accent-green` | `#6BBF8A` |
+| Phase 3 / Warnings | `--accent-coral` | `#E07A6A` |
+| Phase 4 / Advanced | `--accent-purple` | `#9B8EC4` |
 | Titles | `--title-black` | `#1E1E1E` |
 | Body text | `--text-dark` | `#2C2C2C` |
 | Secondary text | `--text-mid` | `#4A4A4A` |
 | Muted text | `--text-light` | `#6B6B6B` |
+| Content background | `--content-bg` | `#DDE5ED` |
