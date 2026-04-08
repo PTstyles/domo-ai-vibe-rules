@@ -141,7 +141,45 @@ async function executeFunction(alias: string, payload: Record<string, unknown>) 
 }
 ```
 
+## Discovering function names on global Domo packages
+
+When calling a **Domo-provided global package** (e.g. DOMO Notifications, DOMO DataSets, DOMO Users),
+the exported function names and their exact parameter signatures are not discoverable via the REST API
+— `GET /api/codeengine/v2/packages/{id}/versions/{v}` returns `"functions": []` for all global packages.
+
+**How to find them:** navigate to the package source in the Domo UI:
+
+```
+https://{instance}.domo.com/codeengine/{packageId}
+```
+
+This opens the Code Engine editor showing the full JavaScript source for the package. Read it to find:
+- Exact exported function names (e.g. `sendEmail`, `sendBuzzRequest`)
+- Positional parameter names and order (Code Engine maps by **position**, not key name)
+- Which parameters are optional / nullable
+
+> **Why this matters:** guessing function names against the API returns 404 for every wrong name,
+> giving no indication of what the correct name is. Without reading the source first, you will
+> burn multiple round-trips and may need the user to paste the source manually.
+
+### Example — DOMO Notifications (`03ba6971-98d0-4654-9bfd-aa897816df33`)
+
+Key functions found in source:
+
+| Function | Parameters (positional) | Notes |
+|---|---|---|
+| `sendEmail` | `recipientEmails, subject, body, personRecipients, groupRecipients, attachments, attachment, includeReplyAll` | `recipientEmails` is a single comma-separated string, not an array |
+| `sendEmailToListOfEmails` | `to, subject, body, attachments, attachment, includeReplyAll` | `to` is an array of strings |
+| `sendBuzzRequest` | `channelId, message` | `channelId` must be a valid UUID |
+| `sendExternalEmail` | `to, subject, body, attachments, attachment, includeReplyAll` | Validates against authorized domain whitelist |
+
+> **Gotcha:** `sendEmail` takes `recipientEmails` as a plain string (e.g. `"user@example.com"`),
+> not an array. Passing an array causes silent failure or incorrect routing.
+
 ## Checklist
+- [ ] Read package source at `https://{instance}.domo.com/codeengine/{packageId}` before writing any call
+- [ ] Exact function name confirmed from source (do not guess)
+- [ ] Parameter names and types confirmed from source JSDoc comments
 - [ ] Calls use `domo.post('/domo/codeengine/v2/packages/{alias}', params)` pattern
 - [ ] Manifest uses `packagesMapping` (not `packageMapping`)
 - [ ] `packagesMapping.version` is explicitly pinned when deterministic package behavior is required
