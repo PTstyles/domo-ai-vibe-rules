@@ -38,7 +38,7 @@ Apply before writing any code:
 
 ## Phase 1 — Manifest & contracts
 
-Use `cap-apps-manifest`.
+Use `manifest`.
 
 Define all external resource mappings first — datasets, collections, workflows, Code Engine packages. Everything else depends on this.
 
@@ -48,11 +48,11 @@ In addition to creation of the manifest.json, check root folder for an existing 
 
 ## Phase 2 — App shell
 
-Use `cap-apps-domo-js`.
+Use `domo-js`.
 
 Set up the baseline: `ryuu.js` import, navigation via `domo.navigate()`, event listeners, environment info.
 
-**Advanced users using DA CLI?** Ask the agent to also use `cap-apps-da-cli` for scaffolding and manifest instance workflows.Should not be used unless user explicitly asks agent to use it.
+**Advanced users using DA CLI?** Ask the agent to also use `da-cli` for scaffolding and manifest instance workflows. Should not be used unless user explicitly asks agent to use it.
 
 ## Phase 2b — App Studio integration (if embedded in App Studio)
 
@@ -598,23 +598,23 @@ See `app-studio-pro-code` for the full filter/variable integration reference, in
 
 ## Phase 3 — Data access (if domo datasets need to be queried)
 
-Use `cap-apps-dataset-query` (primary) and `cap-apps-data-api` (routing overview).
+Use `dataset-query` (primary) and `data-api` (routing overview).
 
 Build queries with `@domoinc/query`. Use the Query API for all dataset reads — it respects page filters and does server-side aggregation.
 
-**Need raw SQL?** Use `cap-apps-sql-query`, but know that SQL ignores page filters.
+**Need raw SQL?** Use `sql-query`, but know that SQL ignores page filters.
 
 **Explicit filter handling for non-Query data access**: If the app uses Code Engine calls, stored procedures, or raw SQL instead of `@domoinc/query`, page filters will NOT be applied automatically. You must register `domo.onFiltersUpdated` (see Phase 2b) and pass filter values as parameters to your data source manually.
 
 ## Phase 4 — App storage (if appdb , or any user data entry is needed)
 
-Use `cap-apps-appdb`.
+Use `appdb`.
 
 Skip if the app only reads datasets. Use AppDB when you need to persist app-specific state, user preferences, or document-style data.
 
 ## Phase 5 — Toolkit clients (if appdb, domo workflows, or domo sql query is needed)
 
-Use `cap-apps-toolkit`.
+Use `toolkit`.
 
 Move to typed `@domoinc/toolkit` clients where they add value (structured responses, type safety). Not required for simple apps.
 
@@ -625,22 +625,22 @@ Only load the skills your app actually requires (3 examples are listed here but 
 
 | Feature needed                                 | Skill                       |
 | ---------------------------------------------- | --------------------------- |
-| AI text generation or text-to-SQL              | `cap-apps-ai-service-layer` |
-| Server-side functions (secrets, external APIs) | `cap-apps-code-engine`      |
-| Triggering automation workflows                | `cap-apps-workflow`         |
+| AI text generation or text-to-SQL              | `ai-service-layer` |
+| Server-side functions (secrets, external APIs) | `code-engine`      |
+| Triggering automation workflows                | `workflow`         |
 
 
 **Decision guide:** If the user hasn't mentioned AI, Code Engine, or Workflows, skip this phase entirely. Don't add complexity the app doesn't need.
 
 ## Phase 7 — Performance review
 
-Use `cap-apps-performance`.
+Use `performance`.
 
 Review all queries before finalizing. Check for full-dataset fetches, missing aggregations, and unnecessary columns.
 
 ## Phase 8 — Build & publish
 
-Use `cap-apps-publish`.
+Use `publish`.
 
 `npm run build` → `cd dist` → `domo publish`. On first publish, copy the generated `id` back to your source manifest.
 
