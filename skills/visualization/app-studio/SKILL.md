@@ -12,7 +12,6 @@ description: Build and manage Domo App Studio apps via REST API. Covers app crea
 > **Authentication**: Use `X-Domo-Authentication: {SID}` for all App Studio API calls. Obtain a SID via `get_sid(instance)` from `upload_bridge.py` (if available in workspace) or via the ryuu token exchange flow (`domo login` → refresh token → SID). Developer tokens (`X-DOMO-Developer-Token`) work for some endpoints but fail on others — SID is universally reliable.
 
 > **Status**: Reverse-engineered from live testing, March 2026
-> **Verified against**: `aeroateam-partner.domo.com` (app `453445400`), `csibas.domo.com` (apps `1400847176`, `2061524048`)
 
 ---
 
@@ -73,8 +72,6 @@ Creates a new App Studio app with a single default landing view.
 ```
 
 The app is created with one default view. The `landingViewId` is the `viewId` of the auto-created page, which doubles as the `pageId` for card and layout operations.
-
-**Verified**: Created 2 apps on `csibas.domo.com`. Both returned 200 with a single default view.
 
 ---
 
@@ -743,7 +740,7 @@ Standard template (6 cards, 10 units wide each):
 
 ## Complete Workflow: Build a Full Dashboard App Programmatically
 
-This workflow creates a multi-section App Studio app from scratch — no UI interaction needed. Verified on `csibas.domo.com` with 23 cards across 2 sections.
+This workflow creates a multi-section App Studio app from scratch — no UI interaction needed.
 
 ### Step 1: Create the App
 
