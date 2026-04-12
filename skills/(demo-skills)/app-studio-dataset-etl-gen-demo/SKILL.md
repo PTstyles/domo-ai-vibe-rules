@@ -1,39 +1,49 @@
 ---
-name: app-studio-demo
-description: Orchestrate a micro-demo Domo App Studio app — multi-page canvas, domo-app-theme palette, hero rows, native charts, filter cards, and left navigation with Domo-native icon names only. Delegates to advanced-app-studio and domo-app-theme; optional demo-packs per vertical. Use when the user wants a new App Studio demo, extra pages on an existing app, or asks for "app studio", "create app", "dashboard", or themed executive layouts.
+name: app-studio-dataset-etl-gen-demo
+description: Vertical App Studio micro-demo with optional dataset creation (domo-data-generator), ETL (magic-etl-cli or magic-etl), then multi-page layout using advanced-app-studio + domo-app-theme. Picks industry packs from references/*.md. Use when building an App Studio walkthrough that needs realistic data pipelines and themed pages per vertical.
 alwaysApply: false
 ---
 
-# Micro-Demo: App Studio App
+# Micro-Demo: App Studio App (dataset + ETL + demo)
 
 ## Skills
 
 Read and follow in order:
 
-1. `~/.agents/skills/advanced-app-studio/SKILL.md` — 
-2. `~/.agents/skills/domo-app-theme/SKILL.md` 
+1. `~/.agents/skills/advanced-app-studio/SKILL.md` —
+2. `~/.agents/skills/domo-app-theme/SKILL.md`
 
 ## Demo Pack
 
-Read `demo-packs/{vertical}.md` for page definitions, icons, metrics, theme, and chart types.
+Read `references/{vertical}.md` for page definitions, icons, metrics, theme, and chart types.
+
+## Demo Pack  References Auto-Selection
+
+When the user doesn't specify an industry vertical, pick from `references/` using this priority:
+
+ manufacturing → healthcare → retail-ecommerce → logistics → financial-services
+
+Available packs: `healthcare.md`, `manufacturing.md`, `retail-ecommerce.md`, `logistics.md`, `financial-services.md`
 
 ## Input Requirements
 
 Needs dataset id's to power cards. Sources:
 
-1. Conversation context may have id's
-2. Ask the user for dataset ids
+1. Ask user if they already have datasets with the required schema
+2. Otherwise 
 
 ## Procedure
 
-1. **Create app**: 
-2. **Create pages**: 
-3. **Apply theme**: GET theme → from domo-app-theme/themes
-4. **Hero metrics**: 3–4 `badge_pop_multi_value` cards per page in ONE ROW at y=20, height 14, YEAR interval
-5. **Native charts**: 1 full-width (width 60) per page + 2–6 detail cards, different chart types per page
-6. **Filter cards**: low-profile (height 6, style null, hideBorder, hideTitle, hideMargins, fitToFrame)
-7. **Assemble layout** per vertical structure: banner y=0 → filters y=14 → heroes y=20 → header y=34 → primary viz y=38 → header y=68 → detail cards y=72
-8. **Navigation**: LEFT orientation, custom icon on EVERY page, HOME first, showTitle false
+1. (If user does not provide) Create Datasets with the `domo-data-generator` skill
+2. (If user does not provide) Create ETL with the `magic-etl-cli` skill (or `magic-etl` for API-oriented dataflow work)
+3. **Create app**:
+4. **Create pages**:
+5. **Apply theme**: GET theme → from domo-app-theme/themes
+6. **Hero metrics**: 3–4 `badge_pop_multi_value` cards per page in ONE ROW at y=20, height 14, YEAR interval
+7. **Native charts**: 1 full-width (width 60) per page + 2–6 detail cards, different chart types per page
+8. **Filter cards**: low-profile (height 6, style null, hideBorder, hideTitle, hideMargins, fitToFrame)
+9. **Assemble layout** per vertical structure: banner y=0 → filters y=14 → heroes y=20 → header y=34 → primary viz y=38 → header y=68 → detail cards y=72
+10. **Navigation**: LEFT orientation, custom icon on EVERY page, HOME first, showTitle false
 
 ## Adding Pages Only
 
@@ -52,7 +62,7 @@ After completion, tell the user:
 - appId and all pageIds
 - Card count per page
 
-## Mandatory UI/UX Standards 
+## Mandatory UI/UX Standards
 
 - All `borderRadius: 0` everywhere (cards, tables, notebooks, components, buttons, tabs, forms, pills)
 - All cards: `borderWidth: 0`, `dropShadow: 'NONE'`, `padding: 0`
