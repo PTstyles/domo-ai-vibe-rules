@@ -1,8 +1,7 @@
 ---
-
-## name: app-studio-dataset-etl-gen-demo
+name: app-studio-dataset-etl-gen-demo
 description: Vertical App Studio micro-demo with optional dataset creation (domo-data-generator), ETL (magic-etl-cli or magic-etl), then multi-page layout using advanced-app-studio + domo-app-theme. Picks industry packs from references/*.md. Use when building an App Studio walkthrough that needs realistic data pipelines and themed pages per vertical.
-alwaysApply: false
+---
 
 # Micro-Demo: App Studio App (dataset + ETL + demo)
 
