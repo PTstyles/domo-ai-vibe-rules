@@ -576,6 +576,41 @@ To move a card from the appendix to the canvas, set both to `false` and position
 - Typical card height: `6` for KPI cards, `8` for charts, `10` for tables
 - Header height: `3` units
 
+### ⚠️ Compact/Standard Sync — CRITICAL
+
+**Every `contentKey` in `standard.template` MUST also exist in `compact.template`.** Domo accepts a PUT with a mismatched compact (returns 200), but the next time any user tries to save changes in the App Studio UI, the save call fails silently. The page appears broken — edits cannot be saved — until the templates are re-synced.
+
+**Root cause**: When building layouts programmatically, it is easy to populate only `standard.template` and leave `compact.template` as the empty array `[]` that newly-created pages return. Domo does not validate this on the layout PUT — it only surfaces during subsequent UI saves.
+
+**Correct fix**: After setting all standard positions, mirror every contentKey into compact with real dimensions (not `height: 0`). Domo also rejects zero-height items on UI save.
+
+```python
+# After building standard template, always sync compact:
+std_keys  = {t["contentKey"] for t in layout["standard"]["template"]}
+comp_keys = {t["contentKey"] for t in layout["compact"]["template"]}
+
+sorted_std = sorted(layout["standard"]["template"], key=lambda t: (t.get("y",0), t.get("x",0)))
+compact_items = []
+for i, item in enumerate(sorted_std):
+    compact_items.append({
+        "contentKey":      item["contentKey"],
+        "type":            "CARD",
+        "x":               0,
+        "y":               i * 8,      # stack vertically
+        "width":           12,         # full compact width
+        "height":          8,          # must be > 0
+        "virtual":         False,
+        "virtualAppendix": False,
+        "children":        [],
+    })
+
+layout["compact"]["template"] = compact_items
+```
+
+Items in the compact view are visible to mobile users. They can be hidden individually in the App Studio UI via the **slash-eye icon** next to each card in the compact/mobile editor.
+
+**One-PUT limit**: On some Domo instances the layout PUT only succeeds once per layout object. If a second PUT returns 400, create a new page to get a fresh layout rather than retrying.
+
 ### Content Type Elements
 
 
