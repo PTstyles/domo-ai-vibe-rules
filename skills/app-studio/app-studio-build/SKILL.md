@@ -9,7 +9,6 @@ Build a complete App Studio app with native cards, hero metrics, filters, and po
 
 **Delegate to these skills for details:**
 - `card-creation` — card body schema, chart type index, reference files for specific chart overrides
-- `domo-app-theme` — palette system, OKLCH color generation
 
 ---
 
@@ -107,7 +106,7 @@ for nb in theme.get('notebooks', []):
 #           color['value']['value'] = '#1A1A2E'
 #           break
 #
-# Skip color changes unless you know the target color ID. The domo-app-theme skill has palette details.
+# Skip color changes unless you know the target color ID.
 ```
 
 Write back:
@@ -279,7 +278,22 @@ community-domo-cli -y pages add-card $OTHER_PAGE $FILTER_ID
 
 ## Step 6: Layout Assembly
 
-Each page follows the same y-band grid. Get layout first, then build the template arrays.
+Choose a layout from the table below (default is the Hero Grid). Read the corresponding
+layout reference file for full grid coordinates, `card_positions`, and `special_entries`.
+
+### Layout index
+
+| Layout | File | isDynamic | Slots | Best for |
+|--------|------|-----------|-------|----------|
+| **Default: Hero Grid** | `layouts/layout-default-hero-grid.md` | False | Filters + heroes + primary viz + detail row | Standard dashboard with KPI metrics |
+| **A: Right Sidebar** | `layouts/layout-a-right-sidebar.md` | True | Wide left + narrow right, 3 sections with page breaks | Master-detail, commentary panels |
+| **B: Symmetric Grid** | `layouts/layout-b-symmetric-grid.md` | False | Full→halves→thirds→6-grid→full, separator | Data-dense comparison dashboards |
+| **C: Left Column Feature** | `layouts/layout-c-left-column-feature.md` | True | Narrow left stack + wide right, two-panel lower | KPI sidebar with feature visualization |
+| **D: Full Canvas** | `layouts/layout-d-full-canvas.md` | True | Single edge-to-edge slot | Embedded app, map, or full-bleed viz |
+| **E: Left Filter + Form** | `layouts/layout-e-left-filter-form.md` | False | Left filters + wide right, spacer, form + card, full bottom | Data entry / interactive forms |
+
+> **Read the layout reference file before building.** It contains the exact `card_positions`,
+> `special_entries`, and `is_dynamic` values to paste into `layout-builder.py` or the inline script below.
 
 > **Critical:** `cards create --page-id` automatically adds cards to the layout's `content` array
 > as appendix entries. Always run `layout-get` AFTER creating all cards so the content array is
@@ -290,7 +304,7 @@ Each page follows the same y-band grid. Get layout first, then build the templat
 community-domo-cli --output json app-studio layout-get $APP_ID $PAGE_ID > layout.json
 ```
 
-### Y-band grid pattern
+### Default y-band grid pattern (Hero Grid)
 
 | Band | y | height | Content |
 |------|---|--------|---------|
@@ -308,6 +322,10 @@ community-domo-cli --output json app-studio layout-get $APP_ID $PAGE_ID > layout
 |------|----------------|
 | `CARD` | `contentKey`, `type: "CARD"`, `cardId`, `x`, `y`, `width`, `height`, `style: null`, `hideTitle: true/false`, `hideSummary: true`, `virtual: false`, `virtualAppendix: false` |
 | `HEADER` | `contentKey`, `type: "HEADER"`, `text`, `x`, `y`, `width`, `height`, `virtual: false`, `virtualAppendix: false` |
+| `PAGE_BREAK` | `contentKey`, `type: "PAGE_BREAK"`, `x`, `y`, `width`, `height: 0` — visual page boundary |
+| `SEPARATOR` | `contentKey`, `type: "SEPARATOR"`, `x`, `y`, `width`, `height` — horizontal rule |
+| `SPACER` | `contentKey`, `type: "SPACER"`, `x`, `y`, `width`, `height` — empty whitespace block |
+| `FORM` | `contentKey`, `type: "FORM"`, `x`, `y`, `width`, `height` — embedded form region |
 
 ### Card layout content entry
 
@@ -350,7 +368,8 @@ community-domo-cli --output json app-studio layout-get $APP_ID $PAGE_ID > layout
 ### Build and apply layout
 
 > **Shortcut:** Copy `layout-builder.py` (in the same skill directory as this file) to your working
-> directory, fill in `card_positions` and `header_positions` at the top, and run:
+> directory, fill in `card_positions`, `header_positions`, `special_entries`, and `is_dynamic` at the
+> top (copy these values from the layout reference file), and run:
 > `python3 layout-builder.py --layout layout_PAGE.json --out layout_PAGE_updated.json`
 > The full inline script below is the same logic — use it if you need to customize beyond positions.
 
@@ -443,15 +462,40 @@ for c in layout['content']:
                               'x': 0, 'y': 0, 'width': 6, 'height': 14,
                               'virtual': True, 'virtualAppendix': True, 'style': None, 'children': None})
 
+# ── Special entries (PAGE_BREAK, SEPARATOR, SPACER, FORM) ────────────────────
+# Copy these from the layout reference file. Empty list for default hero grid.
+special_entries = [
+    # {'type': 'PAGE_BREAK', 'x': 0, 'y': 51, 'w': 60, 'h': 0, 'cx': 0, 'cy': 51, 'cw': 12, 'ch': 0},
+]
+
+# Set from layout reference file. Default hero grid uses False.
+is_dynamic = False
+
+if special_entries:
+    all_keys = [c.get('contentKey', 0) for c in new_content]
+    all_keys += [e.get('contentKey', 0) for e in std_template]
+    next_key = max(all_keys) + 100 if all_keys else 900
+    for se in special_entries:
+        ck = next_key
+        next_key += 1
+        base = {'contentKey': ck, 'type': se['type'],
+                'virtual': False, 'virtualAppendix': False, 'children': None}
+        new_content.append({**base, 'x': se['x'], 'y': se['y'],
+                            'width': se['w'], 'height': se['h']})
+        std_template.append({**base, 'x': se['x'], 'y': se['y'],
+                              'width': se['w'], 'height': se['h']})
+        cmp_template.append({**base, 'x': se['cx'], 'y': se['cy'],
+                              'width': se['cw'], 'height': se['ch']})
+
 layout['content'] = new_content
 layout['standard']['template'] = std_template
 layout['compact']['template'] = cmp_template
-layout['isDynamic'] = False
+layout['isDynamic'] = is_dynamic
 json.dump(layout, open('layout_updated.json', 'w'))
 
 canvas = sum(1 for c in new_content if not c.get('virtualAppendix'))
 appx   = sum(1 for c in new_content if c.get('virtualAppendix'))
-print(f'Layout written: {canvas} canvas, {appx} appendix')
+print(f'Layout written: {canvas} canvas, {appx} appendix, isDynamic={is_dynamic}')
 ```
 
 Apply:

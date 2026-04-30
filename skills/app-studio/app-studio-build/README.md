@@ -6,17 +6,25 @@ Step-by-step orchestrator for building Domo App Studio apps with native KPI card
 
 ```
 app-studio-build/
-├── SKILL.md    — 8-step build procedure: app, pages, theme, heroes, charts, filters, layout, nav
-└── README.md   — This file
+├── SKILL.md          — 8-step build procedure: app, pages, theme, heroes, charts, filters, layout, nav
+├── layout-builder.py — Reusable Python script for layout assembly (copy to working dir)
+├── layouts/          — Layout reference files (one per pattern)
+│   ├── layout-default-hero-grid.md
+│   ├── layout-a-right-sidebar.md
+│   ├── layout-b-symmetric-grid.md
+│   ├── layout-c-left-column-feature.md
+│   ├── layout-d-full-canvas.md
+│   └── layout-e-left-filter-form.md
+└── README.md         — This file
 ```
 
 ## How to Use
 
 Read `SKILL.md` and follow Steps 1–8 in order. The skill delegates to:
 
-- **`basic-app-studio`** — CLI command syntax, response shapes, layout API details
 - **`card-creation`** — Card body schema, chart type index, per-chart-type reference files
-- **`domo-app-theme`** — Color palettes and theme system
+
+For layout assembly (Step 6), pick a layout from the index in `SKILL.md` and read the corresponding file in `layouts/`. Copy `card_positions`, `special_entries`, and `is_dynamic` into `layout-builder.py`.
 
 Hero metric and filter card recipes are inlined in the skill (Steps 3 and 5) because they have specific failure modes that agents need at invocation time.
 

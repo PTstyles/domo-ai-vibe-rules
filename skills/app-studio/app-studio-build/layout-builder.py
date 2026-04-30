@@ -3,8 +3,8 @@
 Layout builder for App Studio pages.
 Usage: python3 layout-builder.py --layout layout_p1.json --out layout_p1_updated.json
 
-Fill in card_positions and header_positions for your specific app below the
-"=== CONFIGURE PER APP ===" marker, then run the script.
+Fill in card_positions, header_positions, special_entries, and is_dynamic for your
+specific app below the "=== CONFIGURE PER APP ===" marker, then run the script.
 """
 import json, copy, argparse
 
@@ -30,6 +30,20 @@ card_positions = {
 header_positions = {
     # CONTENT_KEY: {'text': 'Section Title', 'x': 0, 'y': 20, 'w': 60, 'h': 4, 'cx': 0, 'cy': 15, 'cw': 12, 'ch': 3}
 }
+
+# Special non-card entries: PAGE_BREAK, SEPARATOR, SPACER, FORM.
+# These are injected after the card/header loop. ContentKeys are auto-assigned.
+# Each entry: {'type': TYPE, 'x': X, 'y': Y, 'w': W, 'h': H, 'cx': CX, 'cy': CY, 'cw': CW, 'ch': CH}
+special_entries = [
+    # {'type': 'PAGE_BREAK', 'x': 0, 'y': 51, 'w': 60, 'h': 0, 'cx': 0, 'cy': 51, 'cw': 12, 'ch': 0},
+    # {'type': 'SEPARATOR',  'x': 0, 'y':126, 'w': 60, 'h': 3, 'cx': 0, 'cy':126, 'cw': 12, 'ch': 3},
+    # {'type': 'SPACER',     'x':40, 'y': 64, 'w': 20, 'h': 9, 'cx': 0, 'cy': 64, 'cw': 12, 'ch': 0},
+    # {'type': 'FORM',       'x': 0, 'y': 73, 'w': 30, 'h':38, 'cx': 0, 'cy': 73, 'cw': 12, 'ch': 6},
+]
+
+# Set to True for fluid/responsive layouts, False for fixed-width.
+# Default y-band hero grid uses False. Layouts A, C, D use True.
+is_dynamic = False
 # =========================================================================
 
 layout = json.load(open(args.layout))
@@ -91,12 +105,30 @@ for c in layout['content']:
                               'x': 0, 'y': 0, 'width': 6, 'height': 14,
                               'virtual': True, 'virtualAppendix': True, 'style': None, 'children': None})
 
+# Inject special entries with safe contentKeys
+if special_entries:
+    all_keys = [c.get('contentKey', 0) for c in new_content]
+    all_keys += [e.get('contentKey', 0) for e in std_template]
+    next_key = max(all_keys) + 100 if all_keys else 900
+
+    for se in special_entries:
+        ck = next_key
+        next_key += 1
+        base = {'contentKey': ck, 'type': se['type'],
+                'virtual': False, 'virtualAppendix': False, 'children': None}
+        new_content.append({**base, 'x': se['x'], 'y': se['y'],
+                            'width': se['w'], 'height': se['h']})
+        std_template.append({**base, 'x': se['x'], 'y': se['y'],
+                              'width': se['w'], 'height': se['h']})
+        cmp_template.append({**base, 'x': se['cx'], 'y': se['cy'],
+                              'width': se['cw'], 'height': se['ch']})
+
 layout['content'] = new_content
 layout['standard']['template'] = std_template
 layout['compact']['template'] = cmp_template
-layout['isDynamic'] = False
+layout['isDynamic'] = is_dynamic
 json.dump(layout, open(args.out, 'w'))
 
 canvas = sum(1 for c in new_content if not c.get('virtualAppendix'))
 appx   = sum(1 for c in new_content if c.get('virtualAppendix'))
-print(f'Layout written to {args.out}: {canvas} canvas, {appx} appendix')
+print(f'Layout written to {args.out}: {canvas} canvas, {appx} appendix, isDynamic={is_dynamic}')

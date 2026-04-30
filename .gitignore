@@ -5,3 +5,5 @@ evals/
 *eval.json
 .env
 **/iteration**/
+cobra-demo
+cobra-demo/**
