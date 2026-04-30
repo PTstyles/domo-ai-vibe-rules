@@ -1,0 +1,11 @@
+# Build artifacts — safe to delete anytime
+builds/
+
+# Auth tokens
+.env
+
+# OS
+.DS_Store
+
+# Editor
+.vscode/

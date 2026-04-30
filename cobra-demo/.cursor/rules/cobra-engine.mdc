@@ -1,0 +1,112 @@
+---
+description: Cobra Demo Engine — master config for rapid-fire Domo micro-demos
+alwaysApply: true
+---
+
+# Cobra Demo Engine
+
+This workspace runs rapid-fire micro-demos that build Domo assets independently or in sequence.
+
+## Defaults
+
+- **Instance**: `modocorp.domo.com` (override with `env: other.domo.com` in prompt)
+- **Skills root**: `~/.agents/skills/`
+- **Demo packs**: `demo-packs/` in this workspace (auto-selected unless user specifies a vertical)
+
+## Authentication (CRITICAL — read before any API call)
+
+Auth is already configured. **NEVER ask the user for credentials.** Resolve auth using these sources in order:
+
+### Source 1: Developer token in `.env` (preferred)
+Read `~/Cursor Projects/cobra-demo/.env` for `DOMO_TOKEN`. Use as:
+```
+x-domo-developer-token: <TOKEN>
+```
+This works for ALL Domo API endpoints (dataflows, datasources, cards, apps, etc.).
+
+### Source 2: Ryuu session (fallback)
+The user has already run `domo login`. The session file lives at:
+```
+~/.config/configstore/ryuu/{instance}.json
+```
+For modocorp: `~/.config/configstore/ryuu/modocorp.domo.com.json`
+
+This file contains a `refreshToken` (JWT). To exchange it for a usable session:
+1. Read the ryuu session file
+2. Exchange: `POST https://{instance}/oauth2/token` with the refresh token
+3. Then: `POST https://{instance}/oauth2/sid` with the access token
+4. Use the SID as: `X-Domo-Authentication: <SID>`
+
+If the refresh token is expired, tell the user to re-run `domo login -i {instance}` — do NOT ask for a raw token.
+
+### Source 3: CLI tools
+For dataflow operations, the Java CLI (`domoutil.jar`) and `domo` CLI use the ryuu session automatically. Prefer CLI commands when available (e.g., `list-dataflow`, `dataflow-run-now`).
+
+### Auth resolution order
+1. Check `.env` for `DOMO_TOKEN` → use immediately if found
+2. Check ryuu session file → exchange for SID
+3. Try CLI commands that handle auth internally
+4. Only if ALL fail: tell the user to run `domo login -i {instance}` or add `DOMO_TOKEN=<token>` to `.env`
+
+## Demo Pack Auto-Selection
+
+When the user doesn't specify an industry vertical, pick from `demo-packs/` using this priority:
+1. If prior micro-demos ran in this session, continue with the same vertical
+2. Otherwise, rotate through packs in order: manufacturing → healthcare → retail-ecommerce → logistics → financial-services
+
+Available packs: `healthcare.md`, `manufacturing.md`, `retail-ecommerce.md`, `logistics.md`, `financial-services.md`
+
+## Micro-Demo Routing
+
+When the user's prompt matches a pattern below, read the corresponding `.cursor/rules/` file and follow it:
+
+| Prompt pattern | Rule file | Primary skills |
+|---|---|---|
+| "star schema" / "generate data" / "sample data" / "datasets" | `micro-star-schema.mdc` | `domo-data-generator` |
+| "magic etl" / "dataflow" / "etl" / "transform" | `micro-magic-etl.mdc` | `magic-etl` |
+| "app studio" / "create app" / "dashboard" / "add pages" | `micro-app-studio.mdc` | `app-studio`, `pb-apps-initial-build` |
+| "pro-code" / "custom chart" / "recharts" / "plot" | `micro-pro-code.mdc` | `app-studio-pro-code`, `publish` |
+| "deck" / "pitch" / "slides" / "pdf" / "presentation" | `micro-pitch-deck.mdc` | `html-deck` |
+
+## Observability Routing
+
+| Prompt pattern | Rule file |
+|---|---|
+| "etl broke" / "dataflow errors" / "failed dataflows" / "etl health" | `obs-etl-health.mdc` |
+| "connector broke" / "connector issues" / "connectors running long" / "stale datasets" | `obs-connector-health.mdc` |
+
+## Build Output Convention (MANDATORY)
+
+All build artifacts (pro-code app directories, orchestration scripts, fix scripts, generated files) go under:
+
+```
+builds/{vertical}-{YYYYMMDD}/
+```
+
+Example: `builds/manufacturing-20260408/` contains `mfg-banner-overview/`, `mfg-chart-overview/`, `build-mfg-app.py`, etc.
+
+**NEVER create pro-code app directories or Python scripts at the workspace root.** The root must stay clean — only infrastructure files live there.
+
+If multiple demos for the same vertical run on the same day, append a counter: `builds/manufacturing-20260408-2/`
+
+### What lives where
+
+| Location | Contents | Permanent? |
+|----------|----------|------------|
+| `.cursor/rules/` | Micro-demo rules, this engine | Yes |
+| `.env`, `.env.example` | Auth tokens | Yes |
+| `demo-packs/` | Vertical configs | Yes |
+| `reference-charts/` | Gold-standard chart code | Yes |
+| `canned-prompts.md` | Prompt catalog | Yes |
+| `demo-build-process-summary.md` | README | Yes |
+| `builds/` | All demo build output | **No — delete anytime** |
+
+## State Management
+
+Track IDs (dataset GUIDs, appId, pageIds, designIds) in conversational context. When a micro-demo runs independently with no prior context, either ask for required IDs or look them up in Domo via API.
+
+## Independence Protocol
+
+Each micro-demo can run standalone. If required upstream artifacts don't exist:
+1. Search Domo for existing assets by name pattern
+2. If found, use them; if not, tell the user what's needed first

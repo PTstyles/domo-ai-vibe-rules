@@ -1,0 +1,109 @@
+---
+description: Check connector health — broken updates, long-running imports, stale datasets. Triggers on "connector broke", "connector health", "connectors running long", "connector issues", "stale datasets", "failed connectors".
+alwaysApply: false
+---
+
+# Observability: Connector Health Check
+
+## Authentication (FIRST STEP — do this before any API call)
+
+Resolve auth per `cobra-engine.mdc` § Authentication:
+1. Read `~/Cursor Projects/cobra-demo/.env` for `DOMO_TOKEN` → use as `x-domo-developer-token` header
+2. If no `.env`, check `~/.config/configstore/ryuu/{instance}.json` for ryuu session
+3. If neither works, tell the user to run `domo login -i modocorp.domo.com` or add `DOMO_TOKEN` to `.env`
+4. **NEVER ask the user to paste a raw token** — point them to `.env` or `domo login`
+
+## API Endpoints
+
+All calls against the target instance (default: `modocorp.domo.com`).
+
+### List all datasources
+
+```
+GET https://modocorp.domo.com/api/data/v3/datasources?limit=100&offset=0
+Headers: x-domo-developer-token: {DOMO_TOKEN from .env}
+```
+
+Paginate with `offset` until no more results. Each datasource includes:
+- `id` (GUID), `name`, `dataProviderType` (connector type)
+- `status` — current state
+- `lastSuccessfulRun` — timestamp of last successful import
+- `lastRun` — timestamp of last run attempt
+- `lastRunStatus` — `SUCCESS`, `FAILURE`, `WARNING`, etc.
+- `rowCount`, `columnCount`
+- `owner` — who owns the datasource
+
+### Get datasource details
+
+```
+GET https://modocorp.domo.com/api/data/v3/datasources/{id}
+```
+
+### Check execution history
+
+```
+GET https://modocorp.domo.com/api/data/v3/datasources/{id}/executions?limit=5
+```
+
+Returns recent execution attempts with status, duration, error messages.
+
+## Modes
+
+### Mode 1: Broken Connectors (last 24h)
+
+Triggers: "broke", "failed", "issues", "errors"
+
+1. List all datasources, filter for:
+   - `lastRunStatus == "FAILURE"` or `lastRunStatus == "WARNING"`
+   - `lastRun` within the requested window (default: 24 hours)
+2. For each, fetch execution history to get error details
+3. Present as table:
+
+   | Dataset | Connector Type | Last Run | Status | Error | Owner |
+   |---|---|---|---|---|---|
+   | name | type | timestamp | FAILURE | error message | owner |
+
+4. Group by error pattern and propose fixes:
+   - **Auth expired**: Re-authenticate the connector account
+   - **Rate limited**: Reduce schedule frequency or batch size
+   - **Schema changed**: Source API changed — update field mappings
+   - **Timeout**: Reduce data volume or increase timeout settings
+   - **Permission denied**: Check source system permissions
+
+### Mode 2: Long-Running Connectors
+
+Triggers: "running long", "slow", "taking long"
+
+1. List all datasources, filter for:
+   - Currently running (`status == "RUNNING"` or active execution)
+   - OR last successful run took unusually long
+2. For running connectors, calculate elapsed time from `lastRun` to now
+3. For completed connectors, compare last run duration to historical average
+4. Present as table sorted by elapsed time (longest first):
+
+   | Dataset | Connector Type | Started | Elapsed | Avg Duration | Status | Owner |
+   |---|---|---|---|---|---|---|
+   | name | type | timestamp | Xh Ym | Xh Ym | RUNNING | owner |
+
+5. Flag connectors running > 2x their historical average as anomalous
+
+### Mode 3: Stale Datasets
+
+Triggers: "stale", "not updating", "outdated"
+
+1. List all datasources, filter for:
+   - `lastSuccessfulRun` older than expected (e.g., > 48h for daily connectors)
+   - No recent run attempts at all
+2. Present as table sorted by staleness:
+
+   | Dataset | Connector Type | Last Success | Days Stale | Schedule | Owner |
+   |---|---|---|---|---|---|
+   | name | type | timestamp | X days | daily/hourly | owner |
+
+## Output Contract
+
+Present:
+1. Summary: X datasources checked, Y with issues
+2. Detailed table per mode
+3. Proposed fixes grouped by error pattern
+4. Actionable next steps (which ones can be fixed via API, which need manual intervention)
